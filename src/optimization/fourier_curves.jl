@@ -1,5 +1,8 @@
 
+using LinearAlgebra
+
 # initial guess — unit circle in xy plane
+NF = 4
 params = zeros(6*NF)
 params[1]  = 1.0    # Xc[1] → x(t) = cos(t)
 params[13] = 1.0    # Ys[1] → y(t) = sin(t)

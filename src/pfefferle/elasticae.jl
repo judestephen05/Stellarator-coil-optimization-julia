@@ -17,6 +17,6 @@ end
  
 # Closure condition A(p) from equation (50) — solves R² = A(p) for p
 function A(p)
-    return 2 * Elliptic.E(p) / Elliptic.K(p) - 1
+    return 2 * Elliptic.E(p^2) / Elliptic.K(p^2) - 1
 end
 

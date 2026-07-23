@@ -26,7 +26,7 @@ p = (κ_func, τ_func)
 sspan = (0.0, 2π)
  
 prob = ODEProblem(frenet_serret, u0, sspan, p)
-sol = solve(prob)
+sol = solve(prob, saveat=0.01)
  
 x_vals = [sol.u[i][1] for i in 1:length(sol.u)]
 y_vals = [sol.u[i][2] for i in 1:length(sol.u)]

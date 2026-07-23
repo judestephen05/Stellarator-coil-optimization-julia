@@ -46,6 +46,6 @@ for (i, x) in enumerate(x_grid)
     end
 end
  
-display(contour(x_grid, y_grid, U',  title="U contours (Fig 1)"))
-display(contour(x_grid, y_grid, V',  title="V contours (Fig 2)"))
+display(contour(x_grid, y_grid, U', title="U contours (Fig 1)"))
+display(contour(x_grid, y_grid, V', title="V contours (Fig 2)"))
 display(contour(x_grid, y_grid, ΔΦ', title="ΔΦ/2πn contours (Fig 3)"))
