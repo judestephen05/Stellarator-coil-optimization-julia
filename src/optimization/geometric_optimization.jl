@@ -1,5 +1,5 @@
 
-using Optim, QuadGK, Plots, ADTypes
+using Optim, Plots, ADTypes, ForwardDiff, FastGaussQuadrature
 include("fourier_curves.jl")
  
 # Minimizes bending energy E = ∫κ²ds subject to:
@@ -7,20 +7,35 @@ include("fourier_curves.jl")
 #   - fixed total arc length L
 # Uses ForwardDiff for exact gradients (much faster than numerical differentiation)
  
+const NQUAD = 64  # number of quadrature points; increase if integrand is oscillatory
+const _nodes, _weights = gausslegendre(NQUAD)  # nodes,weights on [-1,1]
+
+# map to [0, 2π]: t = π*(x+1), dt = π dx
+const quad_t = π .* (_nodes .+ 1)
+const quad_w = π .* _weights
+
+
+function fixed_quad(f)
+    s = zero(f(quad_t[1]))  # zero of the right type (Float or Dual)
+    for i in eachindex(quad_t)
+        s += quad_w[i] * f(quad_t[i])
+    end
+    return s
+end
+
 function objective(p)
-    penalty = 1000.0
+    penalty = 500.0
     Tw_target = 0.5
     L_target = 2π
  
-    E,  _ = quadgk(t -> κ_sq(t, p) * ds(t, p), 0, 2π, rtol=1e-2, maxevals=50)
-    Tw, _ = quadgk(t -> τ_geom(t, p) * ds(t, p), 0, 2π, rtol=1e-2, maxevals=50)
-    L,  _ = quadgk(t -> ds(t, p), 0, 2π, rtol=1e-2, maxevals=50)
-    Tw /= 2π
- 
-    return E + penalty*(Tw - Tw_target)^2 + penalty*(L - L_target)^2
+    E  = fixed_quad(t -> κ_sq(t, p) * ds(t, p))
+    Tw = fixed_quad(t -> τ_geom(t, p) * ds(t, p)) / (2π)
+    L  = fixed_quad(t -> ds(t, p))
+
+    return E/2 + penalty*(Tw - Tw_target)^2 + penalty*(L - L_target)^2
 end
  
-result = optimize(objective, params, BFGS(), Optim.Options(store_trace=true, extended_trace=true), autodiff=AutoForwardDiff())
+result = optimize(objective, params, BFGS(), Optim.Options(iterations = 200, store_trace=true, extended_trace=true), autodiff=AutoForwardDiff())
 history = [tr.value for tr in Optim.trace(result)]
 opt_p = Optim.minimizer(result)
 
@@ -37,6 +52,8 @@ let prev_cost = NaN
     end
 end
 
+
+
 #=
 println("Iter   E (bending)   Tw (torsion)   L (length)   Total Cost")
 for (i, tr) in enumerate(Optim.trace(result))
@@ -49,6 +66,7 @@ for (i, tr) in enumerate(Optim.trace(result))
             rpad(round(L_i,digits=4),12), round(tr.value,digits=4))
 end
 =#
+
 
 t_vals = range(0, 2π, length=200)
 x_vals = [curve_x(t, opt_p) for t in t_vals]

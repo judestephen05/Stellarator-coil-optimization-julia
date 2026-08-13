@@ -21,9 +21,7 @@ function biot_savart_general(re, rs, JdV)
             dr = rs[j,:] - re[i,:] # r_src - r_eval
             num = cross(dr, JdV[j,:]) # dr x J dV
             den = norm(dr)^3
-            if den > 0
-                B[i,:] += num/den
-            end
+            B[i,:] += cross(dr, JdV[j,:]) * ifelse(den > eps(), 1/den, zero(den)) # ifelse(condition, a (True), b (False))
         end
     end
     return B * μ0 / (4*pi)
